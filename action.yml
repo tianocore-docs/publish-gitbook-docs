@@ -24,7 +24,8 @@ runs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Check commit message signed off by tag
+    - id: check_signed_off_by
+      name: Check commit message signed off by tag
       uses: gsactions/commit-message-checker@v2
       with:
         pattern: '^Signed-off-by: .+ <.+@.+\..+>$'
@@ -33,8 +34,10 @@ runs:
         error: 'Commit message must include a Signed-off-by tag in the format: Signed-off-by: Name <email>'
         accessToken: ${{ inputs.token }}
         checkAllCommitMessages: 'true'
+      continue-on-error: true
 
-    - name: Check commit message contributed under tag
+    - id: check_contributed_under
+      name: Check commit message contributed under tag
       uses: gsactions/commit-message-checker@v2
       with:
         pattern: '^Contributed-under: TianoCore Contribution Agreement 1\.1$'
@@ -43,6 +46,7 @@ runs:
         error: 'Commit message must include Contributed-under: TianoCore Contribution Agreement 1.1'
         accessToken: ${{ inputs.token }}
         checkAllCommitMessages: 'true'
+      continue-on-error: true
 
     - name: Get Branch Name
       shell: bash
@@ -67,9 +71,11 @@ runs:
         echo "ON_PUSH_PUBLISH_BRANCH=pr-pages" >> $GITHUB_ENV
 
     - name: Wait if Another Gitbook Action in progress
+      if: ${{ steps.check_contributed_under.outcome == 'success' && steps.check_signed_off_by.outcome == 'success' }}
       uses: khulnasoft/action-workflow-queue@v1
 
     - name: Gitbook Action
+      if: ${{ steps.check_contributed_under.outcome == 'success' && steps.check_signed_off_by.outcome == 'success' }}
       uses: zanderzhao/gitbook-action@v1.2.4
       with:
         token: ${{ inputs.token }}

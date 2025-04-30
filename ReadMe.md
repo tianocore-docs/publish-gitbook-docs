@@ -6,7 +6,7 @@ PDF, and ePub formats.
 
 ## Example Workflow
 
-```
+```yml
 name: 'Publish GitBook Docs'
 on:
   pull_request_target:

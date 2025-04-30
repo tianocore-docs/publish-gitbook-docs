@@ -1,0 +1,85 @@
+## @file
+# Publish GitBook Docs
+#
+# Check the commit message for proper Signed-off-by and Contributed-under tags.
+# If the commit message is good, then publish the GitBook document in HTML,
+# PDF, and ePub formats.
+#
+# Copyright (c) 2025, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: 'Publish GitBook Docs'
+
+description: Publish GitBook Docs in HTML, PDF, and ePub formats
+
+inputs:
+  token:
+    description: 'Personal access token for GitBook Action'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Check commit message signed off by tag
+      uses: gsactions/commit-message-checker@v2
+      with:
+        pattern: '^Signed-off-by: .+ <.+@.+\..+>$'
+        excludeDescription: 'true'
+        excludeTitle: 'true'
+        error: 'Commit message must include a Signed-off-by tag in the format: Signed-off-by: Name <email>'
+        accessToken: ${{ inputs.token }}
+        checkAllCommitMessages: 'true'
+
+    - name: Check commit message contributed under tag
+      uses: gsactions/commit-message-checker@v2
+      with:
+        pattern: '^Contributed-under: TianoCore Contribution Agreement 1\.1$'
+        excludeDescription: 'true'
+        excludeTitle: 'true'
+        error: 'Commit message must include Contributed-under: TianoCore Contribution Agreement 1.1'
+        accessToken: ${{ inputs.token }}
+        checkAllCommitMessages: 'true'
+
+    - name: Get Branch Name
+      run: |
+        branch=${{ github.ref_name }}
+        pubdir=${branch/master/draft}
+        pubdir=${pubdir/main/draft}
+        pubdir=${pubdir////-}
+        echo "ON_PUSH_BRANCH_NAME=$branch" >> $GITHUB_ENV
+        echo "ON_PUSH_PUBDIR=$pubdir" >> $GITHUB_ENV
+
+    - name: Publish to gh-pages if push
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        echo "ON_PUSH_PUBLISH_BRANCH=gh-pages" >> $GITHUB_ENV
+
+    - name: Publish to pr-pages if not push
+      if: ${{ github.event_name != 'push' }}
+      run: |
+        echo "ON_PUSH_PUBLISH_BRANCH=pr-pages" >> $GITHUB_ENV
+
+    - name: Wait if Another Gitbook Action in progress
+      uses: khulnasoft/action-workflow-queue@v1
+
+    - name: Gitbook Action
+      uses: zanderzhao/gitbook-action@v1.2.4
+      with:
+        token: ${{ inputs.token }}
+        source_branch: ${{ env.ON_PUSH_BRANCH_NAME }}
+        publish_branch: ${{ env.ON_PUSH_PUBLISH_BRANCH }}
+        publish_dir: ${{ env.ON_PUSH_PUBDIR }}
+        publish_remove_last_build: true
+        gitbook_pdf: true
+        gitbook_pdf_dir: /
+        gitbook_pdf_name: ${{ github.event.repository.name }}-${{ env.ON_PUSH_PUBDIR }}
+        gitbook_epub: true
+        gitbook_epub_dir: /
+        gitbook_epub_name: ${{ github.event.repository.name }}-${{ env.ON_PUSH_PUBDIR }}
+        gitbook_mobi: true
+        gitbook_mobi_dir: /
+        gitbook_mobi_name: ${{ github.event.repository.name }}-${{ env.ON_PUSH_PUBDIR }}

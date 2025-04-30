@@ -95,4 +95,5 @@ runs:
 
     - name: Fail job if commit checks failed
       if: ${{ steps.check_contributed_under.outcome != 'success' || steps.check_signed_off_by.outcome != 'success' }}
+      shell: bash
       run: exit 1

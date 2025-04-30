@@ -92,3 +92,7 @@ runs:
         gitbook_mobi: true
         gitbook_mobi_dir: /
         gitbook_mobi_name: ${{ github.event.repository.name }}-${{ env.ON_PUSH_PUBDIR }}
+
+    - name: Fail job if commit checks failed
+      if: ${{ steps.check_contributed_under.outcome != 'success' || steps.check_signed_off_by.outcome != 'success' }}
+      run: exit 1

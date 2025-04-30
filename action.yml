@@ -45,6 +45,7 @@ runs:
         checkAllCommitMessages: 'true'
 
     - name: Get Branch Name
+      shell: bash
       run: |
         branch=${{ github.ref_name }}
         pubdir=${branch/master/draft}
@@ -55,11 +56,13 @@ runs:
 
     - name: Publish to gh-pages if push
       if: ${{ github.event_name == 'push' }}
+      shell: bash
       run: |
         echo "ON_PUSH_PUBLISH_BRANCH=gh-pages" >> $GITHUB_ENV
 
     - name: Publish to pr-pages if not push
       if: ${{ github.event_name != 'push' }}
+      shell: bash
       run: |
         echo "ON_PUSH_PUBLISH_BRANCH=pr-pages" >> $GITHUB_ENV
 

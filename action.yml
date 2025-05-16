@@ -72,7 +72,7 @@ runs:
 
     - name: Wait if Another Gitbook Action in progress
       if: ${{ steps.check_contributed_under.outcome == 'success' && steps.check_signed_off_by.outcome == 'success' }}
-      uses: khulnasoft/action-workflow-queue@v1
+      uses: ahmadnassri/action-workflow-queue@v1
 
     - name: Gitbook Action
       if: ${{ steps.check_contributed_under.outcome == 'success' && steps.check_signed_off_by.outcome == 'success' }}
